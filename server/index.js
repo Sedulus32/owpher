@@ -22,8 +22,27 @@ function save(data) {
   writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8')
 }
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://owpher.vercel.app',
+  'https://owpher.online'
+]
+
 const app = express()
 app.use(express.json())
+app.use((req, res, next) => {
+  const origin = req.headers.origin
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+  }
+  res.setHeader('Vary', 'Origin')
+  res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(204)
+  }
+  next()
+})
 
 // POST /api/inboxes - create an inbox row
 app.post('/api/inboxes', (req, res) => {
@@ -115,6 +134,7 @@ app.get('/api/inbox/:inbox_key', (req, res) => {
   res.json({ ciphertext: row.ciphertext, read_at: row.read_at })
 })
 
-app.listen(8787, () => {
-  console.log('listening on 8787')
+const PORT = process.env.PORT || 8787
+app.listen(PORT, () => {
+  console.log('listening on ' + PORT)
 })

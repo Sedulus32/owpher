@@ -4,6 +4,8 @@ import Login from './screens/Login'
 import Dashboard from './screens/Dashboard'
 import PublicSend from './screens/PublicSend'
 import Settings from './screens/Settings'
+import Home from './screens/Home'
+import HowItWorks from './screens/HowItWorks'
 
 function ProtectedRoute({ children }) {
   const { user } = useAuth()
@@ -14,14 +16,12 @@ function ProtectedRoute({ children }) {
 function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/how" element={<HowItWorks />} />
       <Route path="/login" element={<Login />} />
       <Route path="/k/:key" element={<PublicSend />} />
-      <Route path="/settings" element={
-        <ProtectedRoute><Settings /></ProtectedRoute>
-      } />
-      <Route path="/" element={
-        <ProtectedRoute><Dashboard /></ProtectedRoute>
-      } />
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
@@ -30,7 +30,7 @@ function AppRoutes() {
 export default function App() {
   return (
     <AuthProvider>
-      <div className="w-full min-h-screen bg-[#0b1220] text-white flex flex-col">
+      <div className="w-full min-h-screen bg-[#070a12] text-white flex flex-col">
         <div className="flex-1 flex flex-col w-full">
           <AppRoutes />
         </div>
@@ -38,3 +38,4 @@ export default function App() {
     </AuthProvider>
   )
 }
+

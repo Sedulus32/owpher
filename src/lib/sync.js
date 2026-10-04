@@ -1,11 +1,12 @@
 import { getQueuedSends, clearQueueItem } from './db'
+import { API } from './api'
 
 export async function flushQueue() {
   if (!navigator.onLine) return
   const items = await getQueuedSends()
   for (const item of items) {
     try {
-      const res = await fetch(`/api/send/${encodeURIComponent(item.inboxKey)}`, {
+      const res = await fetch(`${API}/api/send/${encodeURIComponent(item.inboxKey)}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ciphertext: item.ciphertext })

@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react'
+﻿import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { getKeysForUser, addInboxKey, getKeyRecord, setInboxName, getAllInboxNames, addContact, getContacts, updateContact, deleteContact, deleteInboxKey } from '../lib/db'
 import { generateInboxKey, generateKeyPair, wrapPrivateKey, encryptMessage, decryptMessage, importPrivateKeyJwk } from '../lib/crypto'
+import { API } from '../lib/api'
 
 const sessionKeys = {}
 
@@ -72,7 +73,7 @@ export default function Dashboard() {
       const wrapped = await wrapPrivateKey(keyPair.privateKey, pwd)
       const privJwk = await crypto.subtle.exportKey('jwk', keyPair.privateKey)
       sessionKeys[newKey] = keyPair.privateKey
-      const res = await fetch('/api/inboxes', {
+      const res = await fetch(`${API}/api/inboxes`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ inbox_key: newKey, public_key: JSON.stringify(pubJwk) })
@@ -102,7 +103,7 @@ export default function Dashboard() {
     await loadNames()
     const clearServer = window.confirm('Also clear the slip on the server?')
     if (clearServer) {
-      try { await fetch('/api/inboxes/' + inboxKey, { method: 'DELETE' }) } catch (_) {}
+      try { await fetch(`${API}/api/inboxes/` + inboxKey, { method: 'DELETE' }) } catch (_) {}
     }
   }
 
@@ -144,7 +145,7 @@ export default function Dashboard() {
     if (!inboxKey) return;
     const req = ++reqId.current;
     setSelected((prev) => prev && prev.inboxKey === inboxKey ? prev : { ...prev, inboxKey });
-    const res = await fetch("/api/inbox/" + encodeURIComponent(inboxKey));
+    const res = await fetch(`${API}/api/inbox/` + encodeURIComponent(inboxKey));
     const data = await res.json();
     if (req !== reqId.current) return;
     if (!data || !data.ciphertext) {
@@ -170,16 +171,16 @@ export default function Dashboard() {
     setLoading(true)
     setError('')
     try {
-      let pkRes = await fetch('/api/inboxes/' + normalizedTarget + '/public-key')
+      let pkRes = await fetch(`${API}/api/inboxes/` + normalizedTarget + '/public-key')
       if (pkRes.status === 404) {
         const myRecord = await getKeyRecord(normalizedTarget)
         if (myRecord) {
-          const regRes = await fetch('/api/inboxes', {
+          const regRes = await fetch(`${API}/api/inboxes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ inbox_key: normalizedTarget, public_key: JSON.stringify(myRecord.publicKeyJwk) })
           })
-          if (regRes.ok) pkRes = await fetch('/api/inboxes/' + normalizedTarget + '/public-key')
+          if (regRes.ok) pkRes = await fetch(`${API}/api/inboxes/` + normalizedTarget + '/public-key')
         }
       }
       if (pkRes.status === 404) {
@@ -191,7 +192,7 @@ setError("This key is not on the server. It must be generated on the owner's pho
       if (!public_key) throw new Error('Recipient has no public key registered')
       const recipientPubJwk = JSON.parse(public_key)
       const payload = await encryptMessage(recipientPubJwk, message)
-      let sendRes = await fetch('/api/send/' + normalizedTarget, {
+      let sendRes = await fetch(`${API}/api/send/` + normalizedTarget, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ciphertext: payload })
@@ -199,12 +200,12 @@ setError("This key is not on the server. It must be generated on the owner's pho
       if (sendRes.status === 404) {
         const myRecord = await getKeyRecord(normalizedTarget)
         if (myRecord) {
-          await fetch('/api/inboxes', {
+          await fetch(`${API}/api/inboxes`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ inbox_key: normalizedTarget, public_key: JSON.stringify(myRecord.publicKeyJwk) })
           })
-          sendRes = await fetch('/api/send/' + normalizedTarget, {
+          sendRes = await fetch(`${API}/api/send/` + normalizedTarget, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ciphertext: payload })
@@ -228,7 +229,7 @@ setError("This key is not on the server. It must be generated on the owner's pho
         <div className="flex flex-col gap-6">
           <div className="flex items-center justify-between mb-2">
             <div className="flex flex-col gap-1">
-              <h1 className="text-3xl font-bold text-white tracking-tight">PARCHI</h1>
+              <h1 className="text-3xl font-bold text-white tracking-tight">Owpher</h1>
               <p className="text-xs text-[#94a3b8] uppercase tracking-wider font-medium">One slip. Next message replaces it.</p>
             </div>
             <Link to="/settings" className="parchi-btn-secondary flex items-center gap-2">
@@ -336,3 +337,4 @@ setError("This key is not on the server. It must be generated on the owner's pho
     </div>
   )
 }
+

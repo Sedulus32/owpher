@@ -1,39 +1,53 @@
-# Parchi
+﻿# Owpher
 
-One-slip inbox PWA. Not a chat. Each inbox stores ONE message. The next send overwrites it.
+One-slip inbox. Dark, anonymous, ephemeral. Not a chat. Each inbox holds ONE slip. The next send overwrites it.
 
-## Run
+## What it is
 
-Start the local Express + SQLite server (from the project root):
+- **One slip only.** The next message replaces the last one.
+- **Key is the address.** Share the inbox key, not a password.
+- **E2E encrypted (ECDH P-256).** Private keys stay in your browser, wrapped with your password. Server only sees ciphertext.
+- **Ephemeral.** Slip auto-deletes from the server 5 minutes after the owner first opens it.
+
+## Pages
+
+- `/` — Home: Owpher intro, Get started → `/login`, How it works → `/how`
+- `/login` — Local account (IndexedDB on this device). After login → `/dashboard`
+- `/how` — Full guide (6 sections with examples). Starts with: “Owpher is a one-slip inbox...”
+- `/dashboard` — Inbox screen (heading says Owpher). Reply Box + Send Slip + inbox list + contacts.
+- `/k/:key` — Public send page.
+
+## Run (local)
+
+Start the API server:
 
 ```bash
 cd server
 npm install
 node index.js
+# listens on process.env.PORT || 8787
 ```
 
-Then start the Vite dev server (in another terminal from the project root):
+Then start Vite (proxies `/api` → `http://localhost:8787` when `VITE_API_URL` is empty):
 
 ```bash
 npm install
-npx vite
+npm run dev
 ```
 
-Vite proxies `/api` requests to the Express server on port 3001 during development.
+## Production
 
-## Build & Deploy
+- API base: `https://owpher.onrender.com`
+- `VITE_API_URL` is set via `.env.production` → `https://owpher.onrender.com`. All `fetch("/api/...")` calls use `fetch(`${API}/api/...`)` where `API = import.meta.env.VITE_API_URL || ""` (local dev stays on Vite proxy).
+- CORS on the server allows: `http://localhost:5173`, `https://owpher.vercel.app`, `https://owpher.online`.
 
 ```bash
 npm run build
 ```
 
-Serve the `dist/` folder with any static host, and run `server/index.js` alongside it as your API backend.
+Serve `dist/` as static. Run `server/index.js` as the API backend.
 
-## Security Notes
+## Notes
 
-- Personal login (username + password) is stored ONLY in IndexedDB on this device, salted and hashed. It never leaves the browser.
-- Inbox keys are public and send-only. Anyone with the key can overwrite the slip.
-- E2E encryption uses Web Crypto ECDH P-256. Private keys are wrapped with your password in IndexedDB and never sent to the server.
-- Only the public key is sent to the server so senders can encrypt messages. The server never sees plaintext.
-- Slips auto-delete from the server 5 minutes after the owner first reads them.
-- No multi-device sync for auth. Clearing browser data removes your account.
+- Login is local-only (IndexedDB). Clearing browser data removes the account.
+- Do not send passwords or anything you cannot lose — a slip can be replaced. Free server may sleep, so first send after idle can take ~1 minute.

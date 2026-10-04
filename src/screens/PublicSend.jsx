@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { encryptMessage } from '../lib/crypto'
 import { enqueueSend } from '../lib/db'
+import { API } from '../lib/api'
 
 export default function PublicSend() {
   const { key } = useParams()
@@ -16,11 +17,9 @@ export default function PublicSend() {
     setStatus('')
     try {
       const inboxKey = key.toUpperCase()
-
-      const pkRes = await fetch(`/api/inboxes/${encodeURIComponent(inboxKey)}/public-key`)
+      const pkRes = await fetch(`${API}/api/inboxes/${encodeURIComponent(inboxKey)}/public-key`)
       if (!pkRes.ok) throw new Error('Inbox not found')
       const pkData = await pkRes.json()
-
       let payload
       if (pkData.public_key) {
         try {
@@ -32,12 +31,11 @@ export default function PublicSend() {
       } else {
         throw new Error('This inbox does not support receiving messages.')
       }
-
       if (!navigator.onLine) {
         await enqueueSend(inboxKey, payload)
         setStatus('Queued. Will send when online.')
       } else {
-        const sendRes = await fetch(`/api/send/${encodeURIComponent(inboxKey)}`, {
+        const sendRes = await fetch(`${API}/api/send/${encodeURIComponent(inboxKey)}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ ciphertext: payload })
@@ -56,27 +54,16 @@ export default function PublicSend() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <h2 className="text-lg font-semibold text-white">Send a Parchi to {key?.toUpperCase()}</h2>
-      <p className="text-xs text-[#94a3b8]">
-        One slip only. Next message replaces this.
-      </p>
-      <form onSubmit={handleSend} className="flex flex-col gap-4">
-        <textarea
-          placeholder="Type your slip..."
-          value={message}
-          onChange={e => setMessage(e.target.value)}
-          rows={4}
-          className="bg-[#0f172a] text-[#e2e8f0] border border-[#334155] rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-[#94a3b8]"
-        ></textarea>
-        <button
-          type="submit"
-          disabled={loading || !message}
-          className="bg-[#e2e8f0] text-[#0f172a] rounded-xl py-3 text-sm font-medium hover:bg-white transition-colors disabled:bg-[#334155] disabled:text-[#94a3b8]">
-          Send
-        </button>
-      </form>
-      {status && <p className="text-xs text-[#94a3b8]">{status}</p>}
+    <div className="min-h-screen bg-[#070a12] flex items-center justify-center p-6">
+      <div className="w-full max-w-[480px] flex flex-col gap-6 p-8 rounded-2xl border border-[#1c2333] bg-[#0f141f]/80 backdrop-blur">
+        <h2 className="text-lg font-semibold text-[#e8e6e1]">Send a slip to {key?.toUpperCase()}</h2>
+        <p className="text-xs text-[#8a95a8]">One slip only. Next message replaces this.</p>
+        <form onSubmit={handleSend} className="flex flex-col gap-4">
+          <textarea placeholder="Type your slip..." value={message} onChange={e => setMessage(e.target.value)} rows={4} className="bg-[#070a12] text-[#e8e6e1] border border-[#1c2333] rounded-xl px-4 py-3 text-sm resize-none focus:outline-none focus:border-[#c2b5a3]/40"></textarea>
+          <button type="submit" disabled={loading || !message} className="bg-[#e8e6e1] text-[#0a0c14] rounded-xl py-3 text-sm font-medium hover:bg-white transition-colors disabled:bg-[#1c2333] disabled:text-[#5a657a]">Send</button>
+        </form>
+        {status && <p className="text-xs text-[#8a95a8]">{status}</p>}
+      </div>
     </div>
   )
 }

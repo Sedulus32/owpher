@@ -10,11 +10,11 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Parchi',
-        short_name: 'Parchi',
-        description: 'One slip inbox.',
-        theme_color: '#000000',
-        background_color: '#000000',
+        name: 'Owpher',
+        short_name: 'Owpher',
+        description: 'One slip inbox. Next message replaces it.',
+        theme_color: '#070a12',
+        background_color: '#070a12',
         display: 'standalone',
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
@@ -32,3 +32,4 @@ export default defineConfig({
     }
   }
 })
+
