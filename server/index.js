@@ -25,7 +25,8 @@ function save(data) {
 const allowedOrigins = [
   'http://localhost:5173',
   'https://owpher.vercel.app',
-  'https://owpher.online'
+  'https://owpher.online',
+  'https://www.owpher.online'
 ]
 
 const app = express()
